@@ -2,7 +2,7 @@
     "name": "Cleanup",
     "alias": "cleanup",
     "description": "Adds artisan commands to efficiently clean freescout related entities!",
-    "version": "1.0.0",
+    "version": "1.0.2",
     "detailsUrl": "",
     "author": "LJPc solutions",
     "authorUrl": "https://ljpc.solutions",
