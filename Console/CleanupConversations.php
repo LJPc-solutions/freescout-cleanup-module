@@ -93,25 +93,32 @@ class CleanupConversations extends Command {
 
         $conversationIds = $conversations->pluck( 'id' )->toArray();
 
-        if ( $conversationIds ) {
-            if ( $dryRun ) {
-                $this->info( 'Dry run mode enabled. No conversations were deleted.' );
-                $this->info( 'The following conversations would have been deleted:' );
-                $this->info( implode( ', ', $conversationIds ) );
-            } else {
-                if ( ! $confirmed ) {
-                    $this->info( 'The following conversations will be deleted:' );
-                    $this->info( implode( ', ', $conversationIds ) );
-                    $confirmed = $this->confirm( 'Do you wish to proceed?' );
-                }
-                if ( $confirmed ) {
-                    $this->info( 'Deleting conversations...' );
-                    Conversation::deleteConversationsForever( $conversationIds );
-                    $this->info( 'Conversations deleted successfully.' );
-                }
-            }
-        } else {
+        if ( ! $conversationIds ) {
             $this->info( 'No conversations found matching the specified criteria.' );
+
+            return true;
+        }
+
+        if ( $dryRun ) {
+            $this->info( 'Dry run mode enabled. No conversations were deleted.' );
+            $this->info( 'The following conversations would have been deleted:' );
+            $this->info( implode( ', ', $conversationIds ) );
+
+            return true;
+        }
+
+        if ( ! $confirmed ) {
+            $this->info( 'The following conversations will be deleted:' );
+            $this->info( implode( ', ', $conversationIds ) );
+            $confirmed = $this->confirm( 'Do you wish to proceed?' );
+        }
+
+        if ( $confirmed ) {
+            $this->info( 'Deleting ' . count( $conversationIds ) . ' conversations...' );
+            Conversation::deleteConversationsForever( $conversationIds );
+            $this->info( 'Conversations deleted successfully.' );
+        } else {
+            $this->info( 'Deletion of conversations cancelled.' );
         }
 
         return true;
