@@ -28,29 +28,30 @@ php artisan cleanup:conversations [options]
 
 Available options:
 
-- --mailbox-id: The IDs of the mailboxes to clean up conversations for (can be used multiple times).
-- --status: The statuses of conversations to clean up (1=active, 2=pending, 3=closed, 4=spam, can be used multiple times).
-- --older-than-days: Clean up conversations older than the specified number of days.
-- --subject-starts-with: Clean up conversations with subjects starting with the specified string.
-- --subject-contains: Clean up conversations with subjects containing the specified string.
-- --subject-ends-with: Clean up conversations with subjects ending with the specified string.
-- --dry-run: Perform a dry run without actually deleting conversations.
-- --y: Confirm deletion of conversations.
+- `--mailbox-id`: The IDs of the mailboxes to clean up conversations for (can be used multiple times).
+- `--status`: The statuses of conversations to clean up (1=active, 2=pending, 3=closed, 4=spam, can be used multiple times).
+- `--older-than-days`: Clean up conversations older than the specified number of days.
+- `--subject-starts-with`: Clean up conversations with subjects starting with the specified string.
+- `--subject-contains`: Clean up conversations with subjects containing the specified string.
+- `--subject-ends-with`: Clean up conversations with subjects ending with the specified string.
+- `--dry-run`: Perform a dry run without actually deleting conversations.
+- `--y`: Confirm deletion of conversations.
 
 > [!NOTE]
-> The cleanup command will not immediately delete conversations. It will prompt you to confirm the deletion of conversations before proceeding. If the --y option is provided, the command will not prompt for confirmation and will delete conversations immediately.
+> The cleanup command will not immediately delete conversations. It will prompt you to confirm the deletion of conversations before proceeding. If the `--y` option is provided, the command will not prompt for confirmation and will delete
+> conversations immediately.
 
 
 Examples:
 
 - Clean up conversations older than 30 days:<br />
-`php artisan cleanup:conversations --older-than-days=30`
+  `php artisan cleanup:conversations --older-than-days=30`
 - Clean up closed conversations with subjects starting with "[RESOLVED]":<br />
   `php artisan cleanup:conversations --status=3 --subject-starts-with="[RESOLVED]"`
 - Perform a dry run to preview conversations that would be deleted:<br />
   `php artisan cleanup:conversations --mailbox-id=1,2 --older-than-days=90 --dry-run`
 - Remove all conversations that are older than 60 days and have the status spam or closed:<br />
-`php artisan cleanup:conversations --older-than-days=60 --status=3 --status=4`
+  `php artisan cleanup:conversations --older-than-days=60 --status=3 --status=4`
 
 ## The future of this module
 
