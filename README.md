@@ -39,6 +39,7 @@ Available options:
 - `--subject-starts-with`: Clean up conversations with subjects starting with the specified string.
 - `--subject-contains`: Clean up conversations with subjects containing the specified string.
 - `--subject-ends-with`: Clean up conversations with subjects ending with the specified string.
+- `--limit`: The maximum number of conversations to delete.
 - `--dry-run`: Perform a dry run without actually deleting conversations.
 - `--y`: Confirm deletion of conversations.
 
@@ -52,6 +53,10 @@ Examples:
   `php artisan cleanup:conversations --mailbox-id=1 --mailbox-id=2 --older-than-days=90 --dry-run`
 - Remove all conversations that are older than 60 days and have the status spam or closed:<br />
   `php artisan cleanup:conversations --older-than-days=60 --status=3 --status=4`
+- Remove all conversations that are older than 60 days and have the status spam or closed, but only if the subject starts with "SPAM":<br />
+  `php artisan cleanup:conversations --older-than-days=60 --status=3 --status=4 --subject-starts-with="SPAM"`
+- Remove all conversations that are older than 60 days and have the status spam or closed and limit the amount of conversations to delete to 10:<br />
+  `php artisan cleanup:conversations --older-than-days=60 --status=3 --status=4 --limit=10`
 
 ## The future of this module
 

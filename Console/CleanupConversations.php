@@ -43,6 +43,7 @@ class CleanupConversations extends Command {
             [ 'subject-starts-with', null, InputOption::VALUE_OPTIONAL, 'Clean up conversations with subjects starting with the specified string.' ],
             [ 'subject-contains', null, InputOption::VALUE_OPTIONAL, 'Clean up conversations with subjects containing the specified string.' ],
             [ 'subject-ends-with', null, InputOption::VALUE_OPTIONAL, 'Clean up conversations with subjects ending with the specified string.' ],
+            [ 'limit', null, InputOption::VALUE_OPTIONAL, 'Limit the number of conversations to delete.' ],
             [ 'dry-run', null, InputOption::VALUE_NONE, 'Perform a dry run without actually deleting conversations.' ],
             [ 'y', null, InputOption::VALUE_NONE, 'Confirm deletion of conversations.' ],
         ];
@@ -61,6 +62,7 @@ class CleanupConversations extends Command {
         $subjectStartsWith = $this->option( 'subject-starts-with' );
         $subjectContains   = $this->option( 'subject-contains' );
         $subjectEndsWith   = $this->option( 'subject-ends-with' );
+        $limit             = $this->option( 'limit' );
         $dryRun            = $this->option( 'dry-run' );
         $confirmed         = $this->option( 'y' );
 
@@ -89,6 +91,10 @@ class CleanupConversations extends Command {
 
         if ( $subjectEndsWith ) {
             $conversations->where( 'subject', 'like', '%' . $subjectEndsWith );
+        }
+
+        if ( $limit ) {
+            $conversations->limit( $limit );
         }
 
         $conversationIds = $conversations->pluck( 'id' )->toArray();
