@@ -1,0 +1,24 @@
+{
+    "name": "freescout/cleanup",
+    "description": "",
+    "authors": [
+        {
+            "name": "LJPc solutions",
+            "email": "support@ljpc.nl"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Modules\\Cleanup\\Providers\\CleanupServiceProvider"
+            ],
+            "aliases": {
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Cleanup\\": ""
+        }
+    }
+}

@@ -1,0 +1,25 @@
+{
+    "name": "Cleanup",
+    "alias": "cleanup",
+    "description": "Adds artisan commands to efficiently clean freescout related entities!",
+    "version": "1.0.0",
+    "detailsUrl": "",
+    "author": "LJPc solutions",
+    "authorUrl": "https://ljpc.solutions",
+    "requiredAppVersion": "1.0.2",
+    "license": "AGPL-3.0",
+    "keywords": [],
+    "active": 0,
+    "order": 0,
+    "providers": [
+        "Modules\\Cleanup\\Providers\\CleanupServiceProvider"
+    ],
+    "aliases": {},
+    "files": [
+        "start.php"
+    ],
+    "requires": [],
+    "img": "/modules/cleanup/images/module.svg",
+    "latestVersionUrl": "https://resources.ljpc.network/freescout-modules/cleanup/version.txt",
+    "latestVersionZipUrl": "https://resources.ljpc.network/freescout-modules/cleanup/latest.zip"
+}
