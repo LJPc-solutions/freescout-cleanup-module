@@ -19,7 +19,7 @@
         "start.php"
     ],
     "requires": [],
-    "img": "/modules/cleanup/images/module.svg",
+    "img": "https://resources.ljpc.network/freescout-modules/cleanup/module.svg",
     "latestVersionUrl": "https://resources.ljpc.network/freescout-modules/cleanup/version.txt",
     "latestVersionZipUrl": "https://resources.ljpc.network/freescout-modules/cleanup/latest.zip"
 }
