@@ -27,6 +27,10 @@ To use the cleanup command, run the following Artisan command:
 php artisan cleanup:conversations [options]
 ```
 
+> [!NOTE]
+> The cleanup command will not immediately delete conversations. It will prompt you to confirm the deletion of conversations before proceeding. If the `--y` option is provided, the command will not prompt for confirmation and will delete
+> conversations immediately.
+
 Available options:
 
 - `--mailbox-id`: The IDs of the mailboxes to clean up conversations for (can be used multiple times).
@@ -38,11 +42,6 @@ Available options:
 - `--dry-run`: Perform a dry run without actually deleting conversations.
 - `--y`: Confirm deletion of conversations.
 
-> [!NOTE]
-> The cleanup command will not immediately delete conversations. It will prompt you to confirm the deletion of conversations before proceeding. If the `--y` option is provided, the command will not prompt for confirmation and will delete
-> conversations immediately.
-
-
 Examples:
 
 - Clean up conversations older than 30 days:<br />
@@ -50,7 +49,7 @@ Examples:
 - Clean up closed conversations with subjects starting with "[RESOLVED]":<br />
   `php artisan cleanup:conversations --status=3 --subject-starts-with="[RESOLVED]"`
 - Perform a dry run to preview conversations that would be deleted:<br />
-  `php artisan cleanup:conversations --mailbox-id=1,2 --older-than-days=90 --dry-run`
+  `php artisan cleanup:conversations --mailbox-id=1 --mailbox-id=2 --older-than-days=90 --dry-run`
 - Remove all conversations that are older than 60 days and have the status spam or closed:<br />
   `php artisan cleanup:conversations --older-than-days=60 --status=3 --status=4`
 
