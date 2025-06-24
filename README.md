@@ -6,9 +6,16 @@ This module adds a custom Artisan command to clean up conversations in FreeScout
 
 ## Features
 
+### Conversation Cleanup
 - Clean up conversations based on mailbox IDs, statuses, age, and subject patterns.
 - Perform a dry run to preview the conversations that would be deleted without actually deleting them.
 - Confirm deletion of conversations before proceeding.
+
+### Attachment Cleanup (NEW)
+- Clean up old and large attachments to save storage space.
+- Delete attachments based on age and size criteria.
+- Detailed logging of cleaned attachments.
+- Dry-run mode to preview deletions.
 
 ## Installation
 
@@ -21,7 +28,9 @@ This module adds a custom Artisan command to clean up conversations in FreeScout
 
 ## Usage
 
-To use the cleanup command, run the following Artisan command:
+### Conversation Cleanup
+
+To use the conversation cleanup command, run:
 
 ```bash
 php artisan cleanup:conversations [options]
@@ -57,6 +66,38 @@ Examples:
   `php artisan cleanup:conversations --older-than-days=60 --status=3 --status=4 --subject-starts-with="SPAM"`
 - Remove all conversations that are older than 60 days and have the status spam or closed and limit the amount of conversations to delete to 10:<br />
   `php artisan cleanup:conversations --older-than-days=60 --status=3 --status=4 --limit=10`
+
+### Attachment Cleanup
+
+```bash
+php artisan freescout:cleanup-attachments [options]
+```
+
+Available options:
+
+- `--dry-run`: Preview what would be deleted without actually deleting.
+- `--min-age-days`: Minimum age in days (default: 730 = 2 years).
+- `--min-size-kb`: Minimum size in KB (default: 300).
+- `--max-size-mb`: Maximum size in MB (optional).
+- `--mailbox`: Specific mailbox ID to clean (optional).
+- `--limit`: Maximum number of attachments to process in one run (default: 1000).
+
+Examples:
+
+- Preview deletions (dry run):<br />
+  `php artisan freescout:cleanup-attachments --dry-run`
+- Delete attachments older than 1 year and larger than 500KB:<br />
+  `php artisan freescout:cleanup-attachments --min-age-days=365 --min-size-kb=500`
+- Clean only large files (1MB to 10MB) older than 6 months:<br />
+  `php artisan freescout:cleanup-attachments --min-age-days=180 --min-size-kb=1024 --max-size-mb=10`
+- Clean attachments from specific mailbox:<br />
+  `php artisan freescout:cleanup-attachments --mailbox=1 --min-age-days=730`
+
+> [!IMPORTANT]
+> - Deleted attachments will return 404 errors when accessed.
+> - Links to cleaned attachments in emails or shared externally will break.
+> - Always test with `--dry-run` first.
+> - Consider backing up attachments before bulk deletion.
 
 ## The future of this module
 

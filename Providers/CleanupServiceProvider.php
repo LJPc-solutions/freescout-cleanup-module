@@ -4,6 +4,7 @@ namespace Modules\Cleanup\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Modules\Cleanup\Console\CleanupConversations;
+use Modules\Cleanup\Console\CleanupAttachments;
 
 class CleanupServiceProvider extends ServiceProvider {
     /**
@@ -13,6 +14,7 @@ class CleanupServiceProvider extends ServiceProvider {
      */
     public function boot(): void {
         $this->registerCommands();
+        $this->registerMigrations();
     }
 
     /**
@@ -23,7 +25,15 @@ class CleanupServiceProvider extends ServiceProvider {
     private function registerCommands(): void {
         $this->commands( [
             CleanupConversations::class,
+            CleanupAttachments::class,
         ] );
+    }
+    
+    /**
+     * Register migrations.
+     */
+    private function registerMigrations(): void {
+        $this->loadMigrationsFrom(__DIR__.'/../Database/Migrations');
     }
 
     /**
