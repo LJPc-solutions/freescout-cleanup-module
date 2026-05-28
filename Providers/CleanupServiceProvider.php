@@ -2,9 +2,12 @@
 
 namespace Modules\Cleanup\Providers;
 
+use Eventy;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\ServiceProvider;
-use Modules\Cleanup\Console\CleanupConversations;
 use Modules\Cleanup\Console\CleanupAttachments;
+use Modules\Cleanup\Console\CleanupConversations;
+use View;
 
 class CleanupServiceProvider extends ServiceProvider {
     /**
@@ -15,6 +18,8 @@ class CleanupServiceProvider extends ServiceProvider {
     public function boot(): void {
         $this->registerCommands();
         $this->registerMigrations();
+        $this->registerViews();
+        $this->hooks();
     }
 
     /**
@@ -34,6 +39,44 @@ class CleanupServiceProvider extends ServiceProvider {
      */
     private function registerMigrations(): void {
         $this->loadMigrationsFrom(__DIR__.'/../Database/Migrations');
+    }
+
+    /**
+     * Register module views.
+     */
+    private function registerViews(): void {
+        $viewPath = resource_path( 'views/modules/cleanup' );
+
+        $sourcePath = __DIR__ . '/../Resources/views';
+
+        $this->publishes( [
+            $sourcePath => $viewPath,
+        ], 'views' );
+
+        $this->loadViewsFrom( array_merge( array_map( function ( $path ) {
+            return $path . '/modules/cleanup';
+        }, Config::get( 'view.paths' ) ), [ $sourcePath ] ), 'cleanup' );
+    }
+
+    /**
+     * Register FreeScout hooks.
+     */
+    private function hooks(): void {
+        Eventy::addAction( 'menu.append', function () {
+            if ( auth()->user() && auth()->user()->isAdmin() ) {
+                echo View::make( 'cleanup::partials/menu' )->render();
+            }
+        } );
+
+        Eventy::addFilter( 'menu.selected', function ( $menu ) {
+            if ( auth()->user() && auth()->user()->isAdmin() ) {
+                $menu['cleanup'] = [
+                    'cleanup.index',
+                ];
+            }
+
+            return $menu;
+        } );
     }
 
     /**

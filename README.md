@@ -28,6 +28,14 @@ This module adds a custom Artisan command to clean up conversations in FreeScout
 
 ## Usage
 
+### Browser interface
+
+Administrators can open the new **Cleanup** menu item, or browse to `/cleanup`, to run the cleanup tools without SSH access.
+
+- Conversation cleanup supports the same mailbox, status, age, subject, and limit filters as the Artisan command.
+- Attachment cleanup supports the same mailbox, age, size, and limit filters as the Artisan command.
+- Both tools preview matching records first and require typing `DELETE` before anything is removed.
+
 ### Conversation Cleanup
 
 To use the conversation cleanup command, run:
@@ -110,4 +118,3 @@ Interested in a custom FreeScout module or anything else? Please let us know via
 ## Donations
 
 This module took us time to develop, but we decided to make it open source anyway. If we helped you or your business, please consider donating. Click here to donate.
-
