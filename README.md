@@ -11,18 +11,18 @@ This module adds a custom Artisan command to clean up conversations in FreeScout
 - Perform a dry run to preview the conversations that would be deleted without actually deleting them.
 - Confirm deletion of conversations before proceeding.
 
-### Attachment Cleanup (NEW)
+### Attachment Cleanup
 - Clean up old and large attachments to save storage space.
 - Delete attachments based on age and size criteria.
 - Detailed logging of cleaned attachments.
+- Remove dangling database records of attachments whose file no longer exists on disk.
 - Dry-run mode to preview deletions.
 
 ## Installation
 
-1. Download the latest module zip file [here](https://resources.ljpc.network/freescout-modules/cleanup/latest.zip). **Do not use the master branch!** The master branch is not stable and should only be used for development
-   purposes.
+1. Download the latest module zip file [here](https://resources.ljpc.network/freescout-modules/cleanup/latest.zip), or download the `Cleanup-x.y.z.zip` asset from the [GitHub releases page](https://github.com/LJPc-solutions/freescout-cleanup-module/releases). **Do not use the master branch or the auto-generated "Source code" archives!** Those unpack to a folder named `freescout-cleanup-module-x.y.z`, which will break your FreeScout instance.
 2. Transfer the zip file to the server in the Modules folder of FreeScout.
-3. Unpack the zip file.
+3. Unpack the zip file. The module folder must be named exactly `Cleanup`. If the unpacked folder has any other name, rename it to `Cleanup` before proceeding.
 4. Remove the zip file.
 5. Activate the module via the Modules page in FreeScout.
 
@@ -81,6 +81,7 @@ Available options:
 - `--max-size-mb`: Maximum size in MB (optional).
 - `--mailbox`: Specific mailbox ID to clean (optional).
 - `--limit`: Maximum number of attachments to process in one run (default: 1000).
+- `--dangling`: Delete database records of attachments whose file no longer exists on disk. This is a separate mode: the age and size filters are ignored, `--mailbox`, `--limit` and `--dry-run` still apply. Use this to resync the database after attachment files were removed outside of FreeScout, or to clean up the records left behind by earlier attachment cleanups.
 
 Examples:
 
@@ -92,6 +93,10 @@ Examples:
   `php artisan freescout:cleanup-attachments --min-age-days=180 --min-size-kb=1024 --max-size-mb=10`
 - Clean attachments from specific mailbox:<br />
   `php artisan freescout:cleanup-attachments --mailbox=1 --min-age-days=730`
+- Preview which dangling database records would be removed:<br />
+  `php artisan freescout:cleanup-attachments --dangling --dry-run`
+- Remove dangling database records for files that no longer exist:<br />
+  `php artisan freescout:cleanup-attachments --dangling`
 
 > [!IMPORTANT]
 > - Deleted attachments will return 404 errors when accessed.

@@ -18,7 +18,8 @@ class CleanupAttachments extends Command
                             {--min-size-kb=300 : Minimum size in KB (default: 300)}
                             {--max-size-mb= : Maximum size in MB (optional)}
                             {--mailbox= : Specific mailbox ID to clean (optional)}
-                            {--limit=1000 : Maximum number of attachments to process in one run}';
+                            {--limit=1000 : Maximum number of attachments to process in one run}
+                            {--dangling : Delete database records of attachments whose file no longer exists on disk (ignores age/size filters)}';
     
     protected $description = 'Clean up old and large attachments to save storage space';
     
@@ -40,7 +41,11 @@ class CleanupAttachments extends Command
         if ($dryRun) {
             $this->info('*** DRY RUN MODE - No files will be deleted ***');
         }
-        
+
+        if ($this->option('dangling')) {
+            return $this->cleanupDanglingRecords($dryRun, $mailboxId, $limit);
+        }
+
         $cutoffDate = Carbon::now()->subDays($minAgeDays);
         $minSizeBytes = $minSizeKb * 1024;
         $maxSizeBytes = $maxSizeMb ? $maxSizeMb * 1024 * 1024 : null;
@@ -88,6 +93,61 @@ class CleanupAttachments extends Command
         return 0;
     }
     
+    protected function cleanupDanglingRecords($dryRun, $mailboxId, $limit)
+    {
+        $this->info('Looking for dangling attachment records (file missing on disk)...');
+
+        $disk = Storage::disk('private');
+        $dangling = collect();
+
+        $query = Attachment::query();
+        if ($mailboxId) {
+            $query->whereHas('thread.conversation', function ($q) use ($mailboxId) {
+                $q->where('mailbox_id', $mailboxId);
+            });
+        }
+
+        $query->orderBy('id')->chunk(500, function ($attachments) use ($disk, $dangling, $limit) {
+            foreach ($attachments as $attachment) {
+                if (!$disk->exists($attachment->getStorageFilePath())) {
+                    $dangling->push($attachment);
+                    if ($dangling->count() >= $limit) {
+                        return false;
+                    }
+                }
+            }
+        });
+
+        if ($dangling->isEmpty()) {
+            $this->info('No dangling attachment records found.');
+            return 0;
+        }
+
+        $this->info("Found {$dangling->count()} dangling attachment records.");
+
+        foreach ($dangling as $attachment) {
+            $this->line("- Attachment {$attachment->id}: {$attachment->file_name} ({$attachment->getStorageFilePath()})");
+        }
+
+        if ($dryRun) {
+            $this->info('Mode: DRY RUN (no records were deleted)');
+            return 0;
+        }
+
+        if (!$this->confirm('Do you want to delete these database records?')) {
+            $this->info('Operation cancelled.');
+            return 0;
+        }
+
+        // Core helper also keeps the has_attachments flags on
+        // threads and conversations in sync.
+        Attachment::deleteAttachments($dangling);
+
+        $this->info("Deleted {$dangling->count()} dangling attachment records.");
+
+        return 0;
+    }
+
     protected function findAttachmentsToClean($cutoffDate, $minSizeBytes, $maxSizeBytes, $mailboxId, $limit)
     {
         // The attachments table has no timestamps, so age is determined

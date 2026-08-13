@@ -5,6 +5,9 @@ on:
         tags:
             - '*'
 
+permissions:
+    contents: write
+
 jobs:
     build:
         runs-on: ubuntu-latest
@@ -34,3 +37,13 @@ jobs:
                     password: ${{ secrets.FTP_PASSWORD }}
                     local-dir: ./
                     server-dir: './'
+
+            # The auto-generated "Source code" zips unpack to freescout-cleanup-module-<tag>,
+            # which breaks FreeScout (the folder must be named Cleanup). Attach the correctly
+            # structured zip to the release so users downloading from GitHub get a working one.
+            -   name: Create GitHub release with module zip
+                run: |
+                    cp "${GITHUB_REF_NAME}.zip" "Cleanup-${GITHUB_REF_NAME}.zip"
+                    gh release create "${GITHUB_REF_NAME}" "Cleanup-${GITHUB_REF_NAME}.zip" --title "${GITHUB_REF_NAME}" --notes "See the commit history for changes. Install using Cleanup-${GITHUB_REF_NAME}.zip (unpacks to the required Cleanup folder), not the auto-generated source code archives."
+                env:
+                    GH_TOKEN: ${{ github.token }}
