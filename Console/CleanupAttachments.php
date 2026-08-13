@@ -90,7 +90,11 @@ class CleanupAttachments extends Command
     
     protected function findAttachmentsToClean($cutoffDate, $minSizeBytes, $maxSizeBytes, $mailboxId, $limit)
     {
-        $query = Attachment::where('created_at', '<', $cutoffDate)
+        // The attachments table has no timestamps, so age is determined
+        // by the created_at of the thread the attachment belongs to.
+        $query = Attachment::whereHas('thread', function ($q) use ($cutoffDate) {
+                $q->where('created_at', '<', $cutoffDate);
+            })
             ->where('size', '>=', $minSizeBytes);
         
         if ($maxSizeBytes) {
@@ -109,9 +113,9 @@ class CleanupAttachments extends Command
         });
         
         return $query->with(['thread' => function ($q) {
-                $q->select('id', 'conversation_id');
+                $q->select('id', 'conversation_id', 'created_at');
             }])
-            ->orderBy('created_at', 'asc')
+            ->orderBy('id', 'asc')
             ->limit($limit)
             ->get();
     }

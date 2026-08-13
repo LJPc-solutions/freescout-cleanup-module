@@ -54,7 +54,7 @@ class AttachmentCleanupLog extends Model
             'mime_type' => $attachment->mime_type,
             'size' => $attachment->size,
             'storage_path' => $storagePath,
-            'attachment_created_at' => $attachment->created_at,
+            'attachment_created_at' => $attachment->thread->created_at,
             'cleaned_at' => now(),
         ]);
     }
