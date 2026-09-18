@@ -82,6 +82,7 @@ Available options:
 - `--mailbox`: Specific mailbox ID to clean (optional).
 - `--limit`: Maximum number of attachments to process in one run (default: 1000).
 - `--dangling`: Delete database records of attachments whose file no longer exists on disk. This is a separate mode: the age and size filters are ignored, `--mailbox`, `--limit` and `--dry-run` still apply. Use this to resync the database after attachment files were removed outside of FreeScout, or to clean up the records left behind by earlier attachment cleanups.
+- `--y`: Skip the confirmation prompt. Without it the command asks for confirmation, and when there is no terminal (for example under cron) it cancels itself, so add `--y` to a scheduled run.
 
 Examples:
 
@@ -97,6 +98,8 @@ Examples:
   `php artisan freescout:cleanup-attachments --dangling --dry-run`
 - Remove dangling database records for files that no longer exist:<br />
   `php artisan freescout:cleanup-attachments --dangling`
+- Run from cron without the confirmation prompt:<br />
+  `php artisan freescout:cleanup-attachments --min-age-days=730 --min-size-kb=300 --y`
 
 > [!IMPORTANT]
 > - Deleted attachments will return 404 errors when accessed.

@@ -19,7 +19,8 @@ class CleanupAttachments extends Command
                             {--max-size-mb= : Maximum size in MB (optional)}
                             {--mailbox= : Specific mailbox ID to clean (optional)}
                             {--limit=1000 : Maximum number of attachments to process in one run}
-                            {--dangling : Delete database records of attachments whose file no longer exists on disk (ignores age/size filters)}';
+                            {--dangling : Delete database records of attachments whose file no longer exists on disk (ignores age/size filters)}
+                            {--y : Skip the confirmation prompt, for cron jobs}';
     
     protected $description = 'Clean up old and large attachments to save storage space';
     
@@ -72,7 +73,7 @@ class CleanupAttachments extends Command
         
         $this->info("Found {$attachments->count()} attachments to process.");
         
-        if (!$dryRun && !$this->confirm('Do you want to proceed with deletion?')) {
+        if (!$dryRun && !$this->option('y') && !$this->confirm('Do you want to proceed with deletion?')) {
             $this->info('Operation cancelled.');
             return 0;
         }
@@ -134,7 +135,7 @@ class CleanupAttachments extends Command
             return 0;
         }
 
-        if (!$this->confirm('Do you want to delete these database records?')) {
+        if (!$this->option('y') && !$this->confirm('Do you want to delete these database records?')) {
             $this->info('Operation cancelled.');
             return 0;
         }
