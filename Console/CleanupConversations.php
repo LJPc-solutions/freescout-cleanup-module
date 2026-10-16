@@ -3,7 +3,9 @@
 namespace Modules\Cleanup\Console;
 
 use App\Conversation;
+use App\Thread;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\Console\Input\InputOption;
 
 class CleanupConversations extends Command {
@@ -44,6 +46,8 @@ class CleanupConversations extends Command {
             [ 'subject-contains', null, InputOption::VALUE_OPTIONAL, 'Clean up conversations with subjects containing the specified string.' ],
             [ 'subject-ends-with', null, InputOption::VALUE_OPTIONAL, 'Clean up conversations with subjects ending with the specified string.' ],
             [ 'limit', null, InputOption::VALUE_OPTIONAL, 'Limit the number of conversations to delete.' ],
+            [ 'notes', null, InputOption::VALUE_NONE, 'Delete only the notes (threads with type 3) of the matching conversations, never the opening thread of a conversation. The conversations themselves are kept, --older-than-days and --limit apply to the notes.' ],
+            [ 'by-user-id', null, InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'Only delete notes created by these user IDs. Requires --notes.' ],
             [ 'dry-run', null, InputOption::VALUE_NONE, 'Perform a dry run without actually deleting conversations.' ],
             [ 'y', null, InputOption::VALUE_NONE, 'Confirm deletion of conversations.' ],
         ];
@@ -63,8 +67,24 @@ class CleanupConversations extends Command {
         $subjectContains   = $this->option( 'subject-contains' );
         $subjectEndsWith   = $this->option( 'subject-ends-with' );
         $limit             = $this->option( 'limit' );
+        $notes             = $this->option( 'notes' );
+        $byUserIds         = $this->option( 'by-user-id' );
         $dryRun            = $this->option( 'dry-run' );
         $confirmed         = $this->option( 'y' );
+
+        if ( $byUserIds && ! $notes ) {
+            $this->error( 'The --by-user-id option can only be used together with --notes.' );
+
+            return 1;
+        }
+
+        foreach ( $byUserIds as $byUserId ) {
+            if ( ! ctype_digit( (string) $byUserId ) || (int) $byUserId === 0 ) {
+                $this->error( 'Invalid --by-user-id value "' . $byUserId . '", expected a user ID.' );
+
+                return 1;
+            }
+        }
 
         $conversations = Conversation::query();
 
@@ -74,11 +94,6 @@ class CleanupConversations extends Command {
 
         if ( $statuses ) {
             $conversations->whereIn( 'status', $statuses );
-        }
-
-        if ( $olderThanDays ) {
-            $olderThanDate = now()->subDays( $olderThanDays );
-            $conversations->where( 'created_at', '<=', $olderThanDate );
         }
 
         if ( $subjectStartsWith ) {
@@ -91,6 +106,15 @@ class CleanupConversations extends Command {
 
         if ( $subjectEndsWith ) {
             $conversations->where( 'subject', 'like', '%' . $subjectEndsWith );
+        }
+
+        if ( $notes ) {
+            return $this->cleanupNotes( $conversations, $byUserIds, $olderThanDays, $limit, $dryRun, $confirmed );
+        }
+
+        if ( $olderThanDays ) {
+            $olderThanDate = now()->subDays( $olderThanDays );
+            $conversations->where( 'created_at', '<=', $olderThanDate );
         }
 
         if ( $limit ) {
@@ -125,6 +149,74 @@ class CleanupConversations extends Command {
             $this->info( 'Conversations deleted successfully.' );
         } else {
             $this->info( 'Deletion of conversations cancelled.' );
+        }
+
+        return true;
+    }
+
+    /**
+     * Delete the notes of the given conversations, keeping the conversations themselves.
+     *
+     * @return mixed
+     */
+    private function cleanupNotes( $conversations, $byUserIds, $olderThanDays, $limit, $dryRun, $confirmed ) {
+        $notes = Thread::query()
+                       ->where( 'type', Thread::TYPE_NOTE )
+                       ->whereIn( 'conversation_id', $conversations->select( 'id' ) )
+                       // Never delete the opening thread of a conversation: phone conversations start with a note.
+                       ->whereExists( function ( $query ) {
+                           $query->select( DB::raw( 1 ) )
+                                 ->from( 'threads as older_threads' )
+                                 ->whereColumn( 'older_threads.conversation_id', 'threads.conversation_id' )
+                                 ->whereColumn( 'older_threads.id', '<', 'threads.id' );
+                       } );
+
+        if ( $byUserIds ) {
+            $notes->whereIn( 'created_by_user_id', $byUserIds );
+        }
+
+        if ( $olderThanDays ) {
+            $olderThanDate = now()->subDays( $olderThanDays );
+            $notes->where( 'created_at', '<=', $olderThanDate );
+        }
+
+        if ( $limit ) {
+            $notes->orderBy( 'id' )->limit( $limit );
+        }
+
+        $noteIds = $notes->pluck( 'id' )->toArray();
+
+        if ( ! $noteIds ) {
+            $this->info( 'No notes found matching the specified criteria.' );
+
+            return true;
+        }
+
+        if ( $dryRun ) {
+            $this->info( 'Dry run mode enabled. No notes were deleted.' );
+            $this->info( 'The following notes would have been deleted:' );
+            $this->info( implode( ', ', $noteIds ) );
+
+            return true;
+        }
+
+        if ( ! $confirmed ) {
+            $this->info( 'The following notes will be deleted:' );
+            $this->info( implode( ', ', $noteIds ) );
+            $confirmed = $this->confirm( 'Do you wish to proceed?' );
+        }
+
+        if ( $confirmed ) {
+            $this->info( 'Deleting ' . count( $noteIds ) . ' notes...' );
+            foreach ( array_chunk( $noteIds, \Helper::IN_LIMIT ) as $noteIdsChunk ) {
+                // deleteThread() also removes the attachments and updates the conversation preview.
+                foreach ( Thread::whereIn( 'id', $noteIdsChunk )->get() as $note ) {
+                    $note->deleteThread();
+                }
+            }
+            $this->info( 'Notes deleted successfully.' );
+        } else {
+            $this->info( 'Deletion of notes cancelled.' );
         }
 
         return true;

@@ -8,6 +8,7 @@ This module adds a custom Artisan command to clean up conversations in FreeScout
 
 ### Conversation Cleanup
 - Clean up conversations based on mailbox IDs, statuses, age, and subject patterns.
+- Clean up only the notes of conversations, optionally only the notes created by specific users, while keeping the conversations and their emails.
 - Perform a dry run to preview the conversations that would be deleted without actually deleting them.
 - Confirm deletion of conversations before proceeding.
 
@@ -49,6 +50,8 @@ Available options:
 - `--subject-contains`: Clean up conversations with subjects containing the specified string.
 - `--subject-ends-with`: Clean up conversations with subjects ending with the specified string.
 - `--limit`: The maximum number of conversations to delete.
+- `--notes`: Delete only the notes of the matching conversations instead of the conversations themselves. See [Note cleanup](#note-cleanup).
+- `--by-user-id`: Only delete notes created by these user IDs (can be used multiple times). Requires `--notes`.
 - `--dry-run`: Perform a dry run without actually deleting conversations.
 - `--y`: Confirm deletion of conversations.
 
@@ -66,6 +69,25 @@ Examples:
   `php artisan cleanup:conversations --older-than-days=60 --status=3 --status=4 --subject-starts-with="SPAM"`
 - Remove all conversations that are older than 60 days and have the status spam or closed and limit the amount of conversations to delete to 10:<br />
   `php artisan cleanup:conversations --older-than-days=60 --status=3 --status=4 --limit=10`
+
+#### Note cleanup
+
+With `--notes` the command deletes notes (threads with type 3) and keeps the conversations, their emails and their other threads. This is useful when an integration or AI assistant adds notes that are no longer needed after the conversation has been answered.
+
+- The mailbox, status and subject options select the conversations whose notes are cleaned up.
+- `--older-than-days` applies to the creation date of the note, not of the conversation, and `--limit` limits the number of notes.
+- `--by-user-id` limits the cleanup to notes created by the given users.
+- The opening thread of a conversation is never deleted. Every other note is, including the calls logged in a phone conversation (FreeScout stores those as notes) and the notes that FreeScout adds when a conversation is forwarded.
+- Attachments of deleted notes are deleted as well.
+
+Examples:
+
+- Preview which notes created by user 42 and older than 30 days would be deleted:<br />
+  `php artisan cleanup:conversations --notes --by-user-id=42 --older-than-days=30 --dry-run`
+- Delete the notes created by user 42 that are older than 30 days, for example from a monthly cron job:<br />
+  `php artisan cleanup:conversations --notes --by-user-id=42 --older-than-days=30 --y`
+- Delete all notes older than 90 days in closed conversations of mailbox 1:<br />
+  `php artisan cleanup:conversations --notes --mailbox-id=1 --status=3 --older-than-days=90`
 
 ### Attachment Cleanup
 
